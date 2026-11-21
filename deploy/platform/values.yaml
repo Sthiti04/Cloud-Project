@@ -1,0 +1,7 @@
+repoURL: git@github.com:Sthiti04/CC-Project.git
+branch: main
+project: s23-demo
+region: ap-south-1
+logGroup: /s23/s23-demo/eks
+functionName: s23-demo-dispatcher
+roleArns: {}

@@ -1,0 +1,12 @@
+-r requirements.txt
+pytest==9.2.0
+pytest-cov==7.1.0
+ruff==0.17.4
+mypy==2.4.1
+bandit==1.8.6
+moto[s3,sqs,dynamodb,secretsmanager]==5.2.5
+httpx==0.28.1
+PyYAML==6.0.3
+types-requests>=2.32
+types-protobuf>=7.34
+types-PyYAML>=6.0

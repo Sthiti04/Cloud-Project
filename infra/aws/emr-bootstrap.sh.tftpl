@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+sudo yum install -y amazon-cloudwatch-agent amazon-ssm-agent
+sudo systemctl enable --now amazon-ssm-agent
+sudo tee /opt/aws/amazon-cloudwatch-agent/etc/s23.json >/dev/null <<'JSON'
+{
+  "agent": {"region": "${region}"},
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {"file_path": "/mnt/var/log/hadoop-yarn/containers/*/*/stdout", "log_group_name": "${log_group}", "log_stream_name": "{instance_id}-flink-stdout"},
+          {"file_path": "/mnt/var/log/hadoop-yarn/containers/*/*/stderr", "log_group_name": "${log_group}", "log_stream_name": "{instance_id}-flink-stderr"},
+          {"file_path": "/mnt/var/log/hadoop/steps/*/stdout", "log_group_name": "${log_group}", "log_stream_name": "{instance_id}-steps-stdout"},
+          {"file_path": "/mnt/var/log/hadoop/steps/*/stderr", "log_group_name": "${log_group}", "log_stream_name": "{instance_id}-steps-stderr"}
+        ]
+      }
+    }
+  }
+}
+JSON
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/s23.json

@@ -1,0 +1,6 @@
+apiVersion: 1
+providers:
+  - name: s23
+    folder: S23
+    type: file
+    options: {path: /var/lib/grafana/dashboards}

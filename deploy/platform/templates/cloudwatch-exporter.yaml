@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloudwatch-exporter
+  namespace: observability
+  annotations:
+    eks.amazonaws.com/role-arn: {{ index .Values.roleArns "cloudwatch-exporter" | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: s23-cloudwatch-exporter
+  namespace: observability
+data:
+  config.yml: |
+    region: {{ .Values.region }}
+    period_seconds: 60
+    delay_seconds: 60
+    metrics:
+      - aws_namespace: AWS/Lambda
+        aws_metric_name: Invocations
+        aws_dimensions: [FunctionName]
+        aws_dimension_select: { FunctionName: [{{ .Values.functionName | quote }}] }
+        aws_statistics: [Sum]
+      - aws_namespace: AWS/Lambda
+        aws_metric_name: Errors
+        aws_dimensions: [FunctionName]
+        aws_dimension_select: { FunctionName: [{{ .Values.functionName | quote }}] }
+        aws_statistics: [Sum]
+      - aws_namespace: AWS/Lambda
+        aws_metric_name: Duration
+        aws_dimensions: [FunctionName]
+        aws_dimension_select: { FunctionName: [{{ .Values.functionName | quote }}] }
+        aws_statistics: [Average]
+      - aws_namespace: S23/Notifications
+        aws_metric_name: FailedRecords
+        aws_dimensions: [FunctionName]
+        aws_dimension_select: { FunctionName: [{{ .Values.functionName | quote }}] }
+        aws_statistics: [Sum]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudwatch-exporter
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudwatch-exporter
+  template:
+    metadata:
+      labels:
+        app: cloudwatch-exporter
+    spec:
+      serviceAccountName: cloudwatch-exporter
+      containers:
+        - name: exporter
+          image: prom/cloudwatch-exporter:v0.16.0
+          args: ["9106", "/config/config.yml"]
+          ports:
+            - name: metrics
+              containerPort: 9106
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: s23-cloudwatch-exporter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudwatch-exporter
+  namespace: observability
+  labels:
+    monitor: cloudwatch
+spec:
+  selector:
+    app: cloudwatch-exporter
+  ports:
+    - name: metrics
+      port: 9106
+      targetPort: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cloudwatch-exporter
+  namespace: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  selector:
+    matchLabels:
+      monitor: cloudwatch
+  endpoints:
+    - port: metrics
+      interval: 60s

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: s23-platform
+description: Git-tracked Argo CD applications, log collector, and CloudWatch metrics exporter
+type: application
+version: 0.1.0

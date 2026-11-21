@@ -1,0 +1,10 @@
+syntax = "proto3";
+package s23;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
+
+// Built-in protobuf messages avoid a separate generated-stub build step.
+service DeviceRegistry {
+  rpc GetDevice(google.protobuf.StringValue) returns (google.protobuf.Struct);
+}

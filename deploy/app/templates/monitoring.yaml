@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata: {name: s23-services, namespace: observability}
+spec:
+  namespaceSelector: {matchNames: [s23]}
+  selector: {matchLabels: {monitor: s23}}
+  endpoints: [{port: http, path: /metrics, interval: 15s}]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: s23-grafana-dashboard
+  namespace: observability
+  labels: {grafana_dashboard: "1"}
+data:
+  s23.json: |
+{{ .Files.Get "dashboards/s23.json" | indent 4 }}

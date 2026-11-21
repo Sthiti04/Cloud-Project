@@ -1,0 +1,21 @@
+repoURL: git@github.com:Sthiti04/CC-Project.git
+branch: main
+project: s23-demo
+region: ap-south-1
+logGroup: /s23/s23-demo/eks
+functionName: s23-demo-dispatcher
+roleArns:
+  acknowledgement-service: arn:aws:iam::963348789275:role/s23-demo-acknowledgement-service
+  alert-queue-manager: arn:aws:iam::963348789275:role/s23-demo-alert-queue-manager
+  alert-rule-engine: arn:aws:iam::963348789275:role/s23-demo-alert-rule-engine
+  cloudwatch-exporter: arn:aws:iam::963348789275:role/s23-demo-cloudwatch-exporter
+  device-registry: arn:aws:iam::963348789275:role/s23-demo-device-registry
+  ebs-csi: arn:aws:iam::963348789275:role/s23-demo-ebs-csi
+  fluent-bit: arn:aws:iam::963348789275:role/s23-demo-fluent-bit
+  load-test: arn:aws:iam::963348789275:role/s23-demo-load-test
+  patient-simulator: arn:aws:iam::963348789275:role/s23-demo-patient-simulator
+  prometheus: arn:aws:iam::963348789275:role/s23-demo-prometheus
+  schema-init: arn:aws:iam::963348789275:role/s23-demo-schema-init
+  topic-bootstrap: arn:aws:iam::963348789275:role/s23-demo-topic-bootstrap
+  vital-ingestion: arn:aws:iam::963348789275:role/s23-demo-vital-ingestion
+  vpc-cni: arn:aws:iam::963348789275:role/s23-demo-vpc-cni

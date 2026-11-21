@@ -1,0 +1,120 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s23-monitoring
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 92.21.2
+    helm:
+      releaseName: s23-observability
+      values: |
+        alertmanager:
+          enabled: false
+        defaultRules:
+          create: false
+        kubeEtcd:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        grafana:
+          admin:
+            existingSecret: s23-grafana-admin
+          persistence:
+            enabled: false
+          sidecar:
+            dashboards:
+              enabled: true
+              searchNamespace: ALL
+        prometheus:
+          serviceAccount:
+            create: true
+            name: prometheus
+            annotations:
+              eks.amazonaws.com/role-arn: {{ index .Values.roleArns "prometheus" | quote }}
+          prometheusSpec:
+            retention: 6h
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelector: {}
+            serviceMonitorNamespaceSelector: {}
+            additionalScrapeConfigs:
+              - job_name: emr-flink-9249
+                ec2_sd_configs:
+                  - region: {{ .Values.region | quote }}
+                    port: 9249
+                    filters:
+                      - name: tag:Project
+                        values: [{{ .Values.project | quote }}]
+                      - name: tag:Workload
+                        values: [analytics]
+              - job_name: emr-flink-9250
+                ec2_sd_configs:
+                  - region: {{ .Values.region | quote }}
+                    port: 9250
+                    filters:
+                      - name: tag:Project
+                        values: [{{ .Values.project | quote }}]
+                      - name: tag:Workload
+                        values: [analytics]
+  destination: {server: https://kubernetes.default.svc, namespace: observability}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s23-metrics-server
+  annotations: {argocd.argoproj.io/sync-wave: "-2"}
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server
+    chart: metrics-server
+    targetRevision: 3.14.0
+  destination: {server: https://kubernetes.default.svc, namespace: kube-system}
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s23-application
+  annotations: {argocd.argoproj.io/sync-wave: "1"}
+  finalizers: [resources-finalizer.argocd.argoproj.io]
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.repoURL | quote }}
+    targetRevision: {{ .Values.branch | quote }}
+    path: deploy/app
+    helm: {valueFiles: [values-aws.yaml]}
+  destination: {server: https://kubernetes.default.svc, namespace: s23}
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: vital-ingestion
+      jsonPointers: [/spec/replicas]
+    - group: apps
+      kind: Deployment
+      name: device-registry
+      jsonPointers: [/spec/replicas]
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, RespectIgnoreDifferences=true]
+    retry:
+      limit: 5
+      backoff: {duration: 10s, factor: 2, maxDuration: 2m}

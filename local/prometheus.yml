@@ -1,0 +1,14 @@
+global: {scrape_interval: 15s}
+scrape_configs:
+  - job_name: s23-services
+    static_configs:
+      - targets:
+          - patient-simulator:8080
+          - device-registry:8080
+          - vital-ingestion:8080
+          - alert-rule-engine:8080
+          - alert-queue-manager:8080
+          - acknowledgement-service:8080
+  - job_name: flink
+    static_configs:
+      - targets: [flink-jobmanager:9249, flink-taskmanager:9249]

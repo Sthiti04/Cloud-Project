@@ -1,0 +1,200 @@
+name: s23-demo
+
+x-environment: &environment
+  APP_MODE: local
+  AWS_REGION: ap-south-1
+  AWS_DEFAULT_REGION: ap-south-1
+  AWS_ACCESS_KEY_ID: testing
+  AWS_SECRET_ACCESS_KEY: testing
+  AWS_EC2_METADATA_DISABLED: "true"
+  AWS_ENDPOINT_URL: http://aws-mock:5000
+  KAFKA_BROKERS: kafka:9092
+  ALERT_TABLE: alerts
+  SQS_QUEUE_URL: http://aws-mock:5000/123456789012/notifications
+  ARCHIVE_BUCKET: synthetic-readings
+  ZOOKEEPER_HOSTS: zookeeper:2181
+  DB_HOST: postgres
+  DB_NAME: registry
+  DB_USER: postgres
+  DB_PASSWORD: ${DEMO_DB_PASSWORD:?Run python -m tools.setup_local first}
+  DEMO_API_KEY: ${DEMO_API_KEY:?Run python -m tools.setup_local first}
+  ACK_TIMEOUT_MS: "60000"
+  DISPATCH_LEASE_MS: "45000"
+  MAX_DISPATCHES: "5"
+  FAIL_FIRST_DELIVERY: ${FAIL_FIRST_DELIVERY:-false}
+
+x-service: &service
+  build: {context: ., dockerfile: Dockerfile}
+  image: s23-services:local
+  restart: unless-stopped
+  depends_on:
+    bootstrap: {condition: service_completed_successfully}
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready')"]
+    interval: 5s
+    timeout: 3s
+    retries: 20
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "2"}
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: registry
+      POSTGRES_PASSWORD: ${DEMO_DB_PASSWORD:?Run python -m tools.setup_local first}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d registry"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  aws-mock:
+    image: motoserver/moto:5.2.5
+    environment: {MOTO_PORT: "5000", MOTO_HOST: "0.0.0.0"}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  zookeeper:
+    image: zookeeper:3.9.3
+    environment:
+      ZOO_4LW_COMMANDS_WHITELIST: ruok,srvr,mntr
+      JVMFLAGS: -Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/2181'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  bootstrap:
+    build: {context: ., dockerfile: Dockerfile}
+    image: s23-services:local
+    environment: {<<: *environment, SERVICE: device-registry}
+    command: ["python", "-m", "s23.bootstrap", "local"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      aws-mock: {condition: service_healthy}
+      kafka: {condition: service_healthy}
+      zookeeper: {condition: service_healthy}
+    restart: "no"
+
+  patient-simulator:
+    <<: *service
+    environment: {<<: *environment, SERVICE: patient-simulator}
+
+  device-registry:
+    <<: *service
+    environment: {<<: *environment, SERVICE: device-registry}
+
+  vital-ingestion:
+    <<: *service
+    environment: {<<: *environment, SERVICE: vital-ingestion}
+    ports: ["127.0.0.1:8080:8080"]
+
+  alert-rule-engine:
+    <<: *service
+    environment: {<<: *environment, SERVICE: alert-rule-engine}
+
+  alert-queue-manager:
+    <<: *service
+    environment: {<<: *environment, SERVICE: alert-queue-manager}
+    deploy: {replicas: 2}
+
+  acknowledgement-service:
+    <<: *service
+    environment: {<<: *environment, SERVICE: acknowledgement-service}
+
+  notification-dispatcher:
+    <<: *service
+    environment: {<<: *environment, SERVICE: notification-dispatcher}
+    command: ["python", "-m", "s23.dispatcher"]
+    healthcheck: {disable: true}
+
+  flink-jobmanager:
+    build: {context: ., dockerfile: analytics/Dockerfile}
+    image: s23-analytics:local
+    command: jobmanager
+    ports: ["127.0.0.1:8081:8081"]
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        metrics.reporters: prom
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9249
+    volumes: [flink-checkpoints:/checkpoints]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8081'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  flink-taskmanager:
+    image: s23-analytics:local
+    command: taskmanager
+    depends_on:
+      flink-jobmanager: {condition: service_healthy}
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+        metrics.reporters: prom
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: 9249
+    volumes: [flink-checkpoints:/checkpoints]
+
+  flink-submit:
+    image: s23-analytics:local
+    command: ["flink", "run", "-d", "-m", "flink-jobmanager:8081", "/opt/flink/usrlib/clinical-analytics.jar",
+              "--brokers", "kafka:9092", "--mode", "local", "--checkpoint", "file:///checkpoints"]
+    depends_on:
+      bootstrap: {condition: service_completed_successfully}
+      flink-jobmanager: {condition: service_healthy}
+      flink-taskmanager: {condition: service_started}
+    volumes: [flink-checkpoints:/checkpoints]
+    restart: "no"
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes: ["./local/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["127.0.0.1:9090:9090"]
+
+  grafana:
+    image: grafana/grafana:12.2.1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${DEMO_GRAFANA_PASSWORD:?Run python -m tools.setup_local first}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./local/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+      - ./local/grafana-dashboard.yml:/etc/grafana/provisioning/dashboards/s23.yml:ro
+      - ./deploy/app/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["127.0.0.1:3000:3000"]
+
+volumes:
+  postgres-data:
+  flink-checkpoints:

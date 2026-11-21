@@ -1,0 +1,9 @@
+region                    = "ap-south-1"
+project                   = "s23-demo"
+admin_cidr                = "REPLACE_WITH_YOUR_PUBLIC_IP/32"
+admin_principal_arn        = "arn:aws:iam::REPLACE_ACCOUNT_ID:user/REPLACE_USER"
+allow_paid_resources      = false
+allow_delete_demo_data    = false
+enable_runtime            = false
+lambda_image_uri          = ""
+fail_first_delivery       = false

@@ -1,0 +1,32 @@
+image: "123456789012.dkr.ecr.ap-south-1.amazonaws.com/s23-services@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+environment:
+  APP_MODE: aws
+  AWS_REGION: ap-south-1
+  KAFKA_BROKERS: broker.example.invalid:9098
+  ALERT_TABLE: s23-demo-alerts
+  SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/123456789012/s23-demo-notifications
+  ARCHIVE_BUCKET: s23-demo-synthetic
+  ZOOKEEPER_HOSTS: zookeeper-0.zookeeper:2181,zookeeper-1.zookeeper:2181,zookeeper-2.zookeeper:2181
+  API_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:123456789012:secret:demo-api
+  DB_HOST: db.example.invalid
+  DB_NAME: registry
+  DB_USER: s23_registry
+  DB_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:123456789012:secret:demo-db
+roleArns:
+  patient-simulator: arn:aws:iam::123456789012:role/demo-simulator
+  device-registry: arn:aws:iam::123456789012:role/demo-registry
+  vital-ingestion: arn:aws:iam::123456789012:role/demo-ingestion
+  alert-rule-engine: arn:aws:iam::123456789012:role/demo-rules
+  alert-queue-manager: arn:aws:iam::123456789012:role/demo-queue
+  acknowledgement-service: arn:aws:iam::123456789012:role/demo-ack
+  schema-init: arn:aws:iam::123456789012:role/demo-schema
+  topic-bootstrap: arn:aws:iam::123456789012:role/demo-topics
+  load-test: arn:aws:iam::123456789012:role/demo-load
+  prometheus: arn:aws:iam::123456789012:role/demo-prometheus
+  fluent-bit: arn:aws:iam::123456789012:role/demo-logs
+  cloudwatch-exporter: arn:aws:iam::123456789012:role/demo-exporter
+zookeeper:
+  volumes:
+    - {id: vol-00000000000000001, zone: ap-south-1a}
+    - {id: vol-00000000000000002, zone: ap-south-1b}
+    - {id: vol-00000000000000003, zone: ap-south-1a}

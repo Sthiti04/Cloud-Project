@@ -1,0 +1,40 @@
+{{- range $name, $action := dict "schema-init" "registry" "topic-bootstrap" "topics" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    eks.amazonaws.com/role-arn: {{ index $.Values.roleArns $name | quote }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  template:
+    metadata: {labels: {app: {{ $name }}}}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ $name }}
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, fsGroup: 10001}
+      containers:
+        - name: initialise
+          image: {{ $.Values.image | quote }}
+          command: ["python", "-m", "s23.bootstrap", {{ $action | quote }}]
+          envFrom: [{configMapRef: {name: s23-environment}}]
+          env: [{name: SERVICE, value: device-registry}]
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: "1", memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+{{- end }}

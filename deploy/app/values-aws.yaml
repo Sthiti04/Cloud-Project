@@ -1,0 +1,43 @@
+project: s23-demo
+image: 963348789275.dkr.ecr.ap-south-1.amazonaws.com/s23-demo-services@sha256:aa2809bcb4e41efb810ef4ae4d3b740ee79339f71b051bc4632f0b4c152c9d5d
+environment:
+  ACK_TIMEOUT_MS: '120000'
+  ALERT_TABLE: s23-demo-alerts
+  API_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:s23-demo-api-key-20261120053438189200000002-glDPxd
+  APP_MODE: aws
+  ARCHIVE_BUCKET: s23-demo-963348789275-ae2f9abd
+  AWS_REGION: ap-south-1
+  DB_HOST: s23-demo-registry.c9q4i22w4bbb.ap-south-1.rds.amazonaws.com
+  DB_NAME: registry
+  DB_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:rds!db-23bb7703-2e77-4dfd-8ec6-2e86a8eeca67-Ao0WQI
+  DB_USER: s23_registry
+  DISPATCH_LEASE_MS: '120000'
+  FAIL_FIRST_DELIVERY: 'false'
+  KAFKA_BROKERS: b-1.s23demokafka.oqcffu.c3.kafka.ap-south-1.amazonaws.com:9098,b-2.s23demokafka.oqcffu.c3.kafka.ap-south-1.amazonaws.com:9098
+  MAX_DISPATCHES: '5'
+  REGISTRY_GRPC: dns:///device-registry-grpc.s23.svc.cluster.local:50051
+  SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/963348789275/s23-demo-notifications
+  ZOOKEEPER_HOSTS: zookeeper-0.zookeeper.s23.svc.cluster.local:2181,zookeeper-1.zookeeper.s23.svc.cluster.local:2181,zookeeper-2.zookeeper.s23.svc.cluster.local:2181
+roleArns:
+  acknowledgement-service: arn:aws:iam::963348789275:role/s23-demo-acknowledgement-service
+  alert-queue-manager: arn:aws:iam::963348789275:role/s23-demo-alert-queue-manager
+  alert-rule-engine: arn:aws:iam::963348789275:role/s23-demo-alert-rule-engine
+  cloudwatch-exporter: arn:aws:iam::963348789275:role/s23-demo-cloudwatch-exporter
+  device-registry: arn:aws:iam::963348789275:role/s23-demo-device-registry
+  ebs-csi: arn:aws:iam::963348789275:role/s23-demo-ebs-csi
+  fluent-bit: arn:aws:iam::963348789275:role/s23-demo-fluent-bit
+  load-test: arn:aws:iam::963348789275:role/s23-demo-load-test
+  patient-simulator: arn:aws:iam::963348789275:role/s23-demo-patient-simulator
+  prometheus: arn:aws:iam::963348789275:role/s23-demo-prometheus
+  schema-init: arn:aws:iam::963348789275:role/s23-demo-schema-init
+  topic-bootstrap: arn:aws:iam::963348789275:role/s23-demo-topic-bootstrap
+  vital-ingestion: arn:aws:iam::963348789275:role/s23-demo-vital-ingestion
+  vpc-cni: arn:aws:iam::963348789275:role/s23-demo-vpc-cni
+zookeeper:
+  volumes:
+  - id: vol-069325cae40c2f7e2
+    zone: ap-south-1a
+  - id: vol-0dcb6842b6a2dafca
+    zone: ap-south-1b
+  - id: vol-0bd3029ff31870b57
+    zone: ap-south-1a

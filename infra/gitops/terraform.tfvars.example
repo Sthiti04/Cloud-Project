@@ -1,0 +1,3 @@
+repo_url      = "git@github.com:Sthiti04/CC-Project.git"
+repo_key_file = "../../artifacts/gitops_ed25519"
+branch        = "main"

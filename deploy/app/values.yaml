@@ -1,0 +1,15 @@
+project: s23-demo
+image: REPLACE_WITH_IMMUTABLE_ECR_IMAGE
+roleArns: {}
+environment: {}
+loadTest: {enabled: false, runId: first, rate: 90}
+services:
+  - {name: patient-simulator, replicas: 1, critical: false}
+  - {name: device-registry, replicas: 1, critical: true}
+  - {name: vital-ingestion, replicas: 1, critical: true}
+  - {name: alert-rule-engine, replicas: 1, critical: false}
+  - {name: alert-queue-manager, replicas: 2, critical: false}
+  - {name: acknowledgement-service, replicas: 1, critical: false}
+zookeeper:
+  image: zookeeper:3.9.3
+  volumes: []

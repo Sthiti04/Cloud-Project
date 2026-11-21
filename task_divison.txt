@@ -1,0 +1,52 @@
+S23 - Synthetic Healthcare Monitoring
+Required filename: task_divison.txt (the handout's spelling)
+
+CURRENT IDENTIFIED MEMBER
+idno: 2025H1030055P
+name: Sthiti Swain
+group number: NOT CONFIRMED - check the current Nalanda/group allocation
+
+CURRENT ARRANGEMENT - APPROVAL PENDING
+Only the member above is currently identified. The handout also describes
+equal a-h allocation, two tasks and two services per member. Instructor
+approval is required before claiming this solo arrangement is compliant.
+
+Proposed sole owner: Sthiti Swain
+Tasks if solo arrangement is approved: a, b, c, d, e, f, g, h
+Services if approved:
+1. Patient Simulator
+2. Device Registry
+3. Vital Ingestion Service
+4. Alert Rule Engine
+5. Alert Queue Manager
+6. Notification Dispatcher
+7. Acknowledgement Service
+8. Clinical Analytics Service
+
+WORK/ATTRIBUTION STATUS
+The repository was prepared with AI assistance. Assignment ownership is not
+a claim that every supplied line was independently written by the student.
+Student-performed deployment, tests, live demonstration and understanding:
+NOT YET CONFIRMED. Update truthfully after real work.
+Do not invent members, contributions, screenshots or execution evidence.
+
+OTHER MEMBER SLOTS - TEMPLATES ONLY, NOT ACTUAL MEMBERS
+Slot 2: idno UNASSIGNED; name UNASSIGNED; tasks UNASSIGNED; services UNASSIGNED
+Slot 3: idno UNASSIGNED; name UNASSIGNED; tasks UNASSIGNED; services UNASSIGNED
+Slot 4: idno UNASSIGNED; name UNASSIGNED; tasks UNASSIGNED; services UNASSIGNED
+
+INACTIVE FOUR-PERSON EXAMPLE
+Use only if four real members later agree and the instructor accepts it.
+Member 1: tasks a,b; Patient Simulator and Notification Dispatcher
+Member 2: tasks c,d; Vital Ingestion Service and Device Registry
+Member 3: tasks e,f; Clinical Analytics Service and Alert Queue Manager
+Member 4: tasks g,h; Alert Rule Engine and Acknowledgement Service
+Replace placeholders with actual agreed names/IDs and update the current
+arrangement. This example is not a record of completed contributions.
+
+APPROVAL RECORD - FILL FROM REAL INSTRUCTOR RESPONSE
+Solo/group allocation approval: PENDING
+Topic S23 allocation confirmation: PENDING
+ZooKeeper application-coordination interpretation: PENDING
+AI-use/attribution policy checked: PENDING
+Actual Nalanda deadline and demonstration date: PENDING

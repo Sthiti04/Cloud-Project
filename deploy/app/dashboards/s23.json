@@ -1,0 +1,24 @@
+{
+  "uid": "s23-overview",
+  "title": "S23 Synthetic Monitoring",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {"from": "now-30m", "to": "now"},
+  "panels": [
+    {"id": 1, "title": "HTTP requests / second", "type": "timeseries", "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}, "targets": [{"expr": "sum by(service)(rate(s23_http_requests_total[2m]))", "legendFormat": "{{service}}"}]},
+    {"id": 2, "title": "HTTP error fraction", "type": "timeseries", "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}, "targets": [{"expr": "(sum by(service)(rate(s23_http_requests_total{status=~\"5..\"}[2m])) or on(service) (0 * sum by(service)(rate(s23_http_requests_total[2m])))) / clamp_min(sum by(service)(rate(s23_http_requests_total[2m])), 0.001)", "legendFormat": "{{service}}"}]},
+    {"id": 3, "title": "HTTP p95 latency (seconds)", "type": "timeseries", "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}, "targets": [{"expr": "histogram_quantile(0.95, sum by(le,service)(rate(s23_http_request_duration_seconds_bucket[2m])))", "legendFormat": "{{service}}"}]},
+    {"id": 4, "title": "Processed events / second", "type": "timeseries", "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}, "targets": [{"expr": "sum by(service,kind)(rate(s23_events_total[2m]))", "legendFormat": "{{service}} {{kind}}"}]},
+    {"id": 5, "title": "Queue ownership: exactly one leader", "type": "stat", "gridPos": {"x": 0, "y": 16, "w": 6, "h": 5}, "targets": [{"expr": "sum(s23_queue_leader)"}]},
+    {"id": 6, "title": "EKS ready nodes", "type": "stat", "gridPos": {"x": 6, "y": 16, "w": 6, "h": 5}, "targets": [{"expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})"}]},
+    {"id": 7, "title": "Application ready replicas", "type": "timeseries", "gridPos": {"x": 12, "y": 16, "w": 12, "h": 5}, "targets": [{"expr": "kube_deployment_status_replicas_available{namespace=\"s23\"}", "legendFormat": "{{deployment}}"}]},
+    {"id": 8, "title": "HPA desired replicas", "type": "timeseries", "gridPos": {"x": 0, "y": 21, "w": 12, "h": 8}, "targets": [{"expr": "kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"s23\"}", "legendFormat": "{{horizontalpodautoscaler}}"}]},
+    {"id": 9, "title": "Application CPU usage (cores)", "type": "timeseries", "gridPos": {"x": 12, "y": 21, "w": 12, "h": 8}, "targets": [{"expr": "sum by(pod)(rate(container_cpu_usage_seconds_total{namespace=\"s23\",container!=\"\",container!=\"POD\"}[2m]))", "legendFormat": "{{pod}}"}]},
+    {"id": 10, "title": "Lambda invocations / minute", "type": "timeseries", "gridPos": {"x": 0, "y": 29, "w": 8, "h": 7}, "targets": [{"expr": "aws_lambda_invocations_sum", "legendFormat": "{{function_name}}"}]},
+    {"id": 11, "title": "Lambda duration (milliseconds)", "type": "timeseries", "gridPos": {"x": 8, "y": 29, "w": 8, "h": 7}, "targets": [{"expr": "aws_lambda_duration_average", "legendFormat": "{{function_name}}"}]},
+    {"id": 12, "title": "Notification failed records / minute", "type": "timeseries", "gridPos": {"x": 16, "y": 29, "w": 8, "h": 7}, "targets": [{"expr": "s23_notifications_failed_records_sum", "legendFormat": "{{function_name}}"}]},
+    {"id": 13, "title": "Flink records received / second", "type": "timeseries", "gridPos": {"x": 0, "y": 36, "w": 12, "h": 8}, "targets": [{"expr": "sum(rate(flink_taskmanager_job_task_operator_numRecordsIn[2m]))"}]},
+    {"id": 14, "title": "Service processing failures", "type": "timeseries", "gridPos": {"x": 12, "y": 36, "w": 12, "h": 8}, "targets": [{"expr": "sum by(service,kind)(rate(s23_failures_total[2m]))", "legendFormat": "{{service}} {{kind}}"}]}
+  ]
+}
