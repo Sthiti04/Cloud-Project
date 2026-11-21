@@ -3,17 +3,17 @@ image: 963348789275.dkr.ecr.ap-south-1.amazonaws.com/s23-demo-services@sha256:aa
 environment:
   ACK_TIMEOUT_MS: '120000'
   ALERT_TABLE: s23-demo-alerts
-  API_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:s23-demo-api-key-20261120053438189200000002-glDPxd
+  API_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:s23-demo-api-key-20261121085734523200000001-YFXXaP
   APP_MODE: aws
-  ARCHIVE_BUCKET: s23-demo-963348789275-ae2f9abd
+  ARCHIVE_BUCKET: s23-demo-963348789275-a397c9db
   AWS_REGION: ap-south-1
   DB_HOST: s23-demo-registry.c9q4i22w4bbb.ap-south-1.rds.amazonaws.com
   DB_NAME: registry
-  DB_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:rds!db-23bb7703-2e77-4dfd-8ec6-2e86a8eeca67-Ao0WQI
+  DB_SECRET_ARN: arn:aws:secretsmanager:ap-south-1:963348789275:secret:rds!db-1865e938-be63-4faf-8644-70f4c31d0537-O2nKsa
   DB_USER: s23_registry
   DISPATCH_LEASE_MS: '120000'
   FAIL_FIRST_DELIVERY: 'false'
-  KAFKA_BROKERS: b-1.s23demokafka.oqcffu.c3.kafka.ap-south-1.amazonaws.com:9098,b-2.s23demokafka.oqcffu.c3.kafka.ap-south-1.amazonaws.com:9098
+  KAFKA_BROKERS: b-1.s23demokafka.f4xe05.c3.kafka.ap-south-1.amazonaws.com:9098,b-2.s23demokafka.f4xe05.c3.kafka.ap-south-1.amazonaws.com:9098
   MAX_DISPATCHES: '5'
   REGISTRY_GRPC: dns:///device-registry-grpc.s23.svc.cluster.local:50051
   SQS_QUEUE_URL: https://sqs.ap-south-1.amazonaws.com/963348789275/s23-demo-notifications
@@ -35,9 +35,9 @@ roleArns:
   vpc-cni: arn:aws:iam::963348789275:role/s23-demo-vpc-cni
 zookeeper:
   volumes:
-  - id: vol-069325cae40c2f7e2
+  - id: vol-02fe8d15d51292577
     zone: ap-south-1a
-  - id: vol-0dcb6842b6a2dafca
+  - id: vol-0f07ef216cb7db5a1
     zone: ap-south-1b
-  - id: vol-0bd3029ff31870b57
+  - id: vol-0af7922fccd09a99e
     zone: ap-south-1a
